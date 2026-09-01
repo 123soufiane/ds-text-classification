@@ -19,6 +19,10 @@ jobs:
           pip install -r requirements.txt || pip install scikit-learn pandas joblib
       - name: Train
         run: python text_classify.py
+      - name: Deploy
+        run: |
+          pip install fastapi uvicorn joblib pandas scikit-learn || true
+          uvicorn deploy:app --host 0.0.0.0 --port 8000 &
       - name: Commit model artifact
         run: |
           git config user.name 'github-actions'
