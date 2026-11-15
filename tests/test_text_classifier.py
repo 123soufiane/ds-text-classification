@@ -1,3 +1,6 @@
+import io
+import zipfile
+
 import pandas as pd
 import numpy as np
 import pytest
@@ -5,6 +8,7 @@ from fastapi.testclient import TestClient
 
 from deploy import create_app
 from hf_sentiment import MultilingualSentimentModel, SentimentPrediction
+from prepare_data import parse_dataset
 from text_classify import evaluate_model, predict_text, train_model
 
 
@@ -32,6 +36,30 @@ class FakeSession:
 
 def write_training_data(path, rows):
     pd.DataFrame(rows, columns=["text", "label"]).to_csv(path, index=False)
+
+
+def test_uci_dataset_parser_reads_review_source_and_label():
+    files = {
+        "sentiment labelled sentences/imdb_labelled.txt": (
+            "Great movie\t1\nTerrible plot\t0\n"
+        ),
+        "sentiment labelled sentences/amazon_cells_labelled.txt": (
+            "Loved this phone\t1\nBad battery\t0\n"
+        ),
+        "sentiment labelled sentences/yelp_labelled.txt": (
+            "Friendly staff\t1\nLong wait\t0\n"
+        ),
+    }
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w") as archive:
+        for filename, contents in files.items():
+            archive.writestr(filename, contents)
+
+    rows = parse_dataset(buffer.getvalue())
+
+    assert len(rows) == 6
+    assert rows[0] == ("Great movie", "positive", "imdb")
+    assert rows[-1] == ("Long wait", "negative", "yelp")
 
 
 def test_training_saves_a_text_classifier(tmp_path):

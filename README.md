@@ -11,6 +11,8 @@ The classifier combines word and character TF-IDF features with a linear SVM
 Sentiment Labelled Sentences dataset: 1,000 each from IMDb, Amazon, and Yelp,
 with 500 positive and 500 negative examples per source. The `source` column
 records each sentence's origin.
+The CSV is kept out of Git; GitHub Actions downloads and validates the UCI
+archive with `prepare_data.py` before training.
 
 The dataset is licensed under
 [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/).
