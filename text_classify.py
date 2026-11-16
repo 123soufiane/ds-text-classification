@@ -18,6 +18,7 @@ from sklearn.metrics import (
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 import joblib
+from prepare_data import prepare_dataset
 
 
 PROJECT_DIR = Path(__file__).resolve().parent
@@ -191,6 +192,15 @@ def predict_text(
     return str(model.predict([text.strip()])[0])
 
 
+def ensure_training_data(data_path: Path = DEFAULT_DATA_PATH) -> None:
+    data_path = Path(data_path)
+    if data_path.is_file():
+        return
+    print(f"Training data not found at {data_path}; downloading the UCI dataset.")
+    count = prepare_dataset(data_path)
+    print(f"Prepared {count} labelled training rows.")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Train and evaluate the text classifier")
     parser.add_argument(
@@ -200,6 +210,7 @@ def main() -> None:
     )
     args = parser.parse_args()
 
+    ensure_training_data()
     metrics = evaluate_model()
     model = train_model()
     print("Holdout metrics (20% stratified test split):")

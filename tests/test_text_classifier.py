@@ -9,7 +9,12 @@ from fastapi.testclient import TestClient
 from deploy import create_app
 from hf_sentiment import MultilingualSentimentModel, SentimentPrediction
 from prepare_data import parse_dataset
-from text_classify import evaluate_model, predict_text, train_model
+from text_classify import (
+    ensure_training_data,
+    evaluate_model,
+    predict_text,
+    train_model,
+)
 
 
 class FakeSentimentModel:
@@ -60,6 +65,23 @@ def test_uci_dataset_parser_reads_review_source_and_label():
     assert len(rows) == 6
     assert rows[0] == ("Great movie", "positive", "imdb")
     assert rows[-1] == ("Long wait", "negative", "yelp")
+
+
+def test_missing_training_data_is_downloaded(monkeypatch, tmp_path):
+    data_path = tmp_path / "data.csv"
+    calls = []
+
+    def fake_prepare_dataset(path):
+        calls.append(path)
+        path.write_text("text,label\nGreat movie,positive\n", encoding="utf-8")
+        return 1
+
+    monkeypatch.setattr("text_classify.prepare_dataset", fake_prepare_dataset)
+
+    ensure_training_data(data_path)
+
+    assert calls == [data_path]
+    assert data_path.is_file()
 
 
 def test_training_saves_a_text_classifier(tmp_path):
