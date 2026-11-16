@@ -1,5 +1,7 @@
 from pathlib import Path
-from typing import Any, TypedDict
+from typing import Any
+
+from typing_extensions import TypedDict
 
 import numpy as np
 
